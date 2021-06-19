@@ -1,0 +1,41 @@
+version: "3.4"
+
+services:
+  postgres-flagr:
+    image: postgres:11-alpine
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      - 5001:5432
+
+  local-flagr:
+    image: checkr/flagr
+    environment:
+      - HOST=0.0.0.0
+      - PORT=18000
+      - FLAGR_DB_DBDRIVER=postgres
+      - "FLAGR_DB_DBCONNECTIONSTR=postgres://postgres@postgres-flagr:5432/postgres?sslmode=disable"
+      # What's the difference of (")?
+      # "FLAGR_DB_DBCONNECTIONSTR=postgres://postgres@postgres:5432/postgres?sslmode=disable"
+      # FLAGR_DB_DBCONNECTIONSTR="postgres://postgres@postgres:5432/postgres?sslmode=disable"
+
+    ports:
+      - 18000:18000
+    depends_on: 
+      - postgres-flagr
+
+  postgres-unleash:
+    image: postgres:11-alpine
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      - 5002:5432
+
+  local-unleash:
+    image: unleashorg/unleash-server
+    environment:
+      - "DATABASE_URL=postgres://postgres@postgres-unleash:5432/postgres?sslmode=disable"
+    ports:
+      - 4242:4242
+    depends_on: 
+      - postgres-unleash
